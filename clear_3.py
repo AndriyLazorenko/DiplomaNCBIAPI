@@ -98,22 +98,25 @@ def specify_parameters():
     if not database: database = database_def
     print('Database: {}'.format(database))
     term = input("Specify desired NCBI eSearch query [default]: ".format(term_def))
-    if  not term: term = term_def
+    if not term: term = term_def
     print('Term: {}'.format(term))
     retMax = input("Specify retmax parameter [def: {}]: ".format(retMax_def))
     if not retMax: retMax = retMax_def
     print('retMax: {}'.format(retMax))
-    return database, term, retMax
+    while True:
+        email = input("Enter your email (NCBI will use it to spy and spam you down): ".format(
+            retMax_def))  # пошта необхідна для API-шки
+        if email:
+            if len(email.split('@')) != 2: continue  # just sanity check
+            break
+    return database, term, retMax, email
 
 
 if __name__ == "__main__":
-    # параметри API:
-    Entrez.email = 'ivan.shpotenko@gmail.com'  # пошта необхідна для API-шки
     base_url_esearch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
     base_url_efetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
-    # параметри запиту:
 
-    database, term, retMax = specify_parameters()
+    database, term, retMax, Entrez.email = specify_parameters()
 
     dataset = 'dataset_raw_{}.txt'.format(database)  # destination filename
     print("Results will be downloaded in '{}' file. Be patient.".format(dataset))
@@ -130,7 +133,7 @@ if __name__ == "__main__":
                               query_key=query_key,
                               web_env=web_env)
                 t1 = time.time() - t0
-                print('batch #{} ({} of {} lines): {} sec.'.format(i + 1,(i+1)*retMax,count, t1))
+                print('batch #{} ({} of {} lines): {} sec.'.format(i + 1, (i + 1) * retMax, count, t1))
                 i += 1
             except TimeoutError as err:
                 # retMax -=100
