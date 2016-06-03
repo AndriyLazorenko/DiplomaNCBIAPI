@@ -90,6 +90,7 @@ def write_results(datab, retmax, fh, query_key, web_env, retStart=10):
 
 
 def specify_parameters():
+    print("Please specify some parameters. Hit 'Enter' for default values.")
     database_def = 'SNP'
     term_def = '("Homo sapiens"[Organism] OR homo sapiens[All Fields]) AND (snp[Snp_Class] AND (00000.0500[GLOBAL_MAF] : 00000.5000[GLOBAL_MAF]) AND by 1000g[Validation] NOT merged rs[Filter] AND Y[ALLELE])'
     retMax_def = 1300
@@ -137,7 +138,7 @@ if __name__ == "__main__":
                 pass
             except urllib.error.HTTPError as err2:
                 print(err2)
-                print('Database may be downloaded.')
+                print("Database may be downloaded. Check '{}' file. Have fun.".format(dataset))
                 break
     with open(dataset) as fh:
         print(len(list(fh.readlines())))
