@@ -124,7 +124,6 @@ if __name__ == "__main__":
     count, query_key, web_env = get_search_query_options(database, term)
     print('QueryKey: {}, WebEnv: {}'.format(query_key, web_env))
     with open(dataset, 'w') as fh:
-        # for i in range(count // retMax + 1):
         i = 0
         while True:
             try:
