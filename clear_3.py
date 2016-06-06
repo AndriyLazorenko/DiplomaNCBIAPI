@@ -9,6 +9,9 @@ import errno
 import os
 import signal  # would NOT work properly on WINDOWS. UNIX only
 
+#TODO: add check for existance of dataset_raw_SNP.txt file
+#TODO: write result to file with appended allele field e.g. dataset_raw_SNP_Y.txt
+
 
 class TimeoutError(Exception):
     pass
@@ -146,8 +149,6 @@ def specify_parameters():
         term = term_def_OMIM
     if not term: term = term_def
     print('Term: {}'.format(term))
-
-
 
     # retMax = input("Specify retmax parameter [def: {}]: ".format(retMax_def))
     while True:
