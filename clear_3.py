@@ -90,7 +90,6 @@ def get_search_query_options(database, term):
 #     fh.write(req.text)
 
 
-@timeout(20, os.strerror(errno.ETIMEDOUT))
 def harvest_url(datab, query_key, web_env, retmax=5, retStart=0):
     '''
     Writes results obtained from NCBI (use QueryKey and WebEnv from eSearch) to file specified.
@@ -128,8 +127,17 @@ def specify_parameters():
     term = input("Specify desired NCBI eSearch query [default]: ".format(term_def))
     if not term: term = term_def
     print('Term: {}'.format(term))
-    retMax = input("Specify retmax parameter [def: {}]: ".format(retMax_def))
-    if not retMax: retMax = retMax_def
+    # retMax = input("Specify retmax parameter [def: {}]: ".format(retMax_def))
+    while True:
+        inp = input(
+            "Do you want to continue downloading dataset from {}? (Y/n): ".format(database))
+        reset_flag = False if inp.lower() == 'y' else True
+        if (inp.lower() == 'y') or inp.lower() == 'n':
+            break
+    print(reset_flag)
+    print()
+    # if not retMax: retMax = retMax_def
+    retMax = retMax_def
     print('retMax: {}'.format(retMax))
     while True:
         email = input("Enter your email (NCBI will use it to spy and spam you down): ".format(
@@ -137,7 +145,7 @@ def specify_parameters():
         if email:
             if len(email.split('@')) != 2: continue  # just sanity check
             break
-    return database, term, retMax, email
+    return database, term, retMax, email, reset_flag
 
 
 def cook_url(line, param, value):
@@ -157,11 +165,53 @@ def cook_url(line, param, value):
     return line[:begin] + str(value) + line[end:]
 
 
+def chopper(query_key, web_env, retMax, reset_flag=False):
+    global dataset
+    # with open(dataset, '{}'.format('w' if reset_flag else 'a+')) as fh:
+
+    with open (dataset) as fh_read:
+        num_lines = sum(1 for line in fh_read if line.rstrip())
+        print(num_lines)
+        with open(dataset, 'a+') as fh:
+            i = num_lines // retMax
+            residue = num_lines % retMax
+            print(i)
+            urly = harvest_url(database, query_key=query_key, web_env=web_env, retmax=retMax)
+            while True:
+                try:
+                    t0 = time.time()
+                    chop(i, urly, fh, residue=residue)
+                    i += 1
+                    t1 = time.time() - t0
+                    print('batch #{} ({} of {} lines): {} sec.'.format(i + 1, (i + 1) * retMax, count, t1))
+                    if ((i - 1) * retMax) > count:
+                        print("Database may be downloaded. Check '{}' file. Have fun.".format(dataset))
+                        break
+                except TimeoutError as err:
+                    # retMax -=100
+                    print(err, 'Trying again: ret_max = {}'.format(retMax))
+                    pass
+                except urllib.error.HTTPError as err2:
+                    print(err2)
+                    print("Database may be downloaded. Check '{}' file. Have fun.".format(dataset))
+                    break
+        print('{} entries in {}.'.format(len(list(fh_read.readlines())), dataset))
+
+
+@timeout(23, os.strerror(errno.ETIMEDOUT))
+def chop(i, url, fh, residue=0):
+    retStart = i * retMax + residue
+    url = cook_url(url, 'retstart', retStart)
+    print(url)
+    req = requests.post(url)
+    fh.write(req.text)
+
+
 if __name__ == "__main__":
     base_url_esearch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
     base_url_efetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
 
-    database, term, retMax, Entrez.email = specify_parameters()
+    database, term, retMax, Entrez.email, reset_flag = specify_parameters()
 
     dataset = 'dataset_raw_{}.txt'.format(database)  # destination filename
     print("Results will be downloaded in '{}' file. Be patient.".format(dataset))
@@ -172,30 +222,4 @@ if __name__ == "__main__":
 
     count, query_key, web_env = get_search_query_options(database, term)
     print('QueryKey: {}, WebEnv: {}'.format(query_key, web_env))
-    with open(dataset, 'w') as fh:
-        i = 0
-        urly = harvest_url(database, query_key=query_key, web_env=web_env, retmax=retMax)
-        while True:
-            try:
-                t0 = time.time()
-                retStart = i * retMax
-                url = cook_url(urly, 'retstart', retStart)
-                print(url)
-                req = requests.post(url)
-                fh.write(req.text)
-                t1 = time.time() - t0
-                print('batch #{} ({} of {} lines): {} sec.'.format(i + 1, (i + 1) * retMax, count, t1))
-                i += 1
-                if ((i - 1) * retMax) > count:
-                    print("Database may be downloaded. Check '{}' file. Have fun.".format(dataset))
-                    break
-            except TimeoutError as err:
-                # retMax -=100
-                print(err, 'Trying again: ret_max = {}'.format(retMax))
-                pass
-            except urllib.error.HTTPError as err2:
-                print(err2)
-                print("Database may be downloaded. Check '{}' file. Have fun.".format(dataset))
-                break
-    with open(dataset) as fh:
-        print(len(list(fh.readlines())))
+    chopper(query_key, web_env, retMax, reset_flag=reset_flag)
