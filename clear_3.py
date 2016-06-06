@@ -11,7 +11,8 @@ import signal  # would NOT work properly on WINDOWS. UNIX only
 
 #TODO: add check for existance of dataset_raw_SNP.txt file
 #TODO: write result to file with appended allele field e.g. dataset_raw_SNP_Y.txt
-
+#TODO: clean the garbage
+#TODO: create classes for functions, single responsibility
 
 class TimeoutError(Exception):
     pass
@@ -192,7 +193,7 @@ def chopper(query_key, web_env, retMax, reset_flag=False):
     global dataset
     # with open(dataset, '{}'.format('w' if reset_flag else 'a+')) as fh:
 
-    with open (dataset) as fh_read:
+    with open(dataset) as fh_read:
         num_lines = sum(1 for line in fh_read if line.rstrip())
         print(num_lines)
         with open(dataset, 'a+') as fh:
