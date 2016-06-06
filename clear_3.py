@@ -119,12 +119,23 @@ def specify_parameters():
     '''
     print("Please specify some parameters. Hit 'Enter' for default values.")
     database_def = 'SNP'
-    term_def = '("Homo sapiens"[Organism] OR homo sapiens[All Fields]) AND (snp[Snp_Class] AND (00000.0500[GLOBAL_MAF] : 00000.5000[GLOBAL_MAF]) AND by 1000g[Validation] NOT merged rs[Filter] AND Y[ALLELE])'
+    isOmim = False
+    term_def = '("Homo sapiens"[Organism] OR homo sapiens[All Fields]) AND (snp[Snp_Class] AND ' \
+               '(00000.0500[GLOBAL_MAF] : 00000.5000[GLOBAL_MAF]) AND by 1000g[Validation] NOT merged rs[Filter] ' \
+               'AND Y[ALLELE])'
+    term_def_OMIM = '("Homo sapiens"[Organism]OR Homo Sapiens[All Fields]) AND (snp[Snp_Class] AND snp_omim[Filter] ' \
+    'AND(00000.0500[GLOBAL_MAF]: 00000.5000[GLOBAL_MAF]) AND by 1000g[Validation] NOT merged rs[Filter] ' \
+    'AND Y[ALLELE])'
     retMax_def = 1300
     database = input("Specify NCBI Database [def: '{}']: ".format(database_def))
+    if  database == "OMIM":
+        isOmim = True
+        database = database_def
     if not database: database = database_def
     print('Database: {}'.format(database))
     term = input("Specify desired NCBI eSearch query [default]: ".format(term_def))
+    if isOmim == True:
+        term = term_def_OMIM
     if not term: term = term_def
     print('Term: {}'.format(term))
     # retMax = input("Specify retmax parameter [def: {}]: ".format(retMax_def))
