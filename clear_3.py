@@ -12,6 +12,7 @@ import signal  # would NOT work properly on WINDOWS. UNIX only
 #TODO: add check for existance of dataset_raw_SNP.txt file
 #TODO: write result to file with appended allele field e.g. dataset_raw_SNP_Y.txt
 #TODO: clean the garbage
+#TODO: clean the code, finish documentation of methods
 #TODO: create classes for functions, single responsibility
 
 class TimeoutError(Exception):
